@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'toastr/build/toastr.css';
 import './App.css';
 import Dropzone from 'react-dropzone';
 import Papa from 'papaparse';
+var toastr = require('toastr');
 const ReactHighcharts = require('react-highcharts');
 
 class App extends Component {
@@ -17,6 +19,26 @@ class App extends Component {
     var fileInput = ReactDOM.findDOMNode(this.refs.drop.fileInputEl);
     fileInput.value = null;
     fileInput.click();
+  }
+  showErrorToast = (msg) => {
+    var _toastrOptions = {
+      'closeButton': true,
+      'debug': false,
+      'newestOnTop': true,
+      'progressBar': true,
+      'positionClass': 'toast-bottom-left',
+      'preventDuplicates': true,
+      'showDuration': '300',
+      'hideDuration': '1000',
+      'timeOut': '5000',
+      'extendedTimeOut': '1000',
+      'showEasing': 'swing',
+      'hideEasing': 'linear',
+      'showMethod': 'fadeIn',
+      'hideMethod': 'fadeOut'
+    };
+    toastr.options = _toastrOptions;
+    toastr.error(msg);
   }
   processChartData = (data) => {
     var series = [];
@@ -55,33 +77,29 @@ class App extends Component {
       const chartConfig = this.processChartData(parsedData.data);
       this.setState({ chartConfig });
     };
-    reader.onabort = () => console.log('file reading was aborted');
-    reader.onerror = () => console.log('file reading has failed');
+    reader.onabort = () => this.showErrorToast('file reading was aborted');
+    reader.onerror = () => this.showErrorToast('file reading has failed');
     reader.readAsBinaryString(files[0]);
   }
   _onDropRejected = () => {
-    console.log('rejected');
-    // DomUtils.toastr().info(DomUtils.globalizeMessage('Sorry we only accept csv, json, xml, or html file extension.'), DomUtils.globalizeMessage('File cannot be uploaded'))
+    this.showErrorToast('Sorry only csv files supported');
   }
   render() {
     return (
       <div className="container">
-        <div className="row" style={{ marginTop: '20px' }}>
-          <div className="col-md-10 col-md-offset-1 col-sm-10 col-sm-offset-1">
-            <div className="dropzone-area">
-              <Dropzone ref="drop" className="dropzone"
-                accept=".csv" onDropRejected={this._onDropRejected}
-                onDropAccepted={this._onDrop} disableClick={true}>
-                <div>{"Drag and drop files"}</div>
-              </Dropzone>
-              <button type="button" className="btn btn-success" onClick={this._open}>
-                Click to upload
+        <div className="dropzone-area">
+          <Dropzone ref="drop" className="dropzone"
+            accept=".csv" onDropRejected={this._onDropRejected}
+            onDropAccepted={this._onDrop} disableClick={true}>
+            <div>{"Drag and drop files"}</div>
+          </Dropzone>
+          <br></br>
+          <button type="button" className="btn btn-success" onClick={this._open}>
+            Click to upload
               </button>
-              {this.state.chartConfig && (
-                <ReactHighcharts config={this.state.chartConfig}></ReactHighcharts>
-              )}
-            </div>
-          </div>
+          {this.state.chartConfig && (
+            <ReactHighcharts config={this.state.chartConfig}></ReactHighcharts>
+          )}
         </div>
       </div>
     );
